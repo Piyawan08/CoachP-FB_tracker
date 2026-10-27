@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Coach's Playbook - ระบบบันทึกและติดตามพัฒนาการนักเตะ</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Prompt & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            pitch: {
+              DEFAULT: '#10b981',
+              dark: '#059669',
+              light: '#34d399',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar for clean coaching dashboard */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    /* Touch target comfort */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-[90%] pointer-events-none"></div>
+
+  <!-- Custom Confirmation Modal (No browser alert/confirm) -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl p-6 max-w-md w-full shadow-2xl transform scale-95 transition-transform duration-200" id="confirm-box">
+      <div class="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <h3 id="confirm-title" class="text-xl font-bold text-white mb-2">ยืนยันการทำรายการ</h3>
+      <p id="confirm-desc" class="text-slate-300 text-sm mb-6 leading-relaxed">คุณแน่ใจหรือไม่ว่าต้องการดำเนินการนี้?</p>
+      <div class="flex items-center justify-end gap-3">
+        <button id="confirm-cancel-btn" class="px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-sm font-medium transition touch-target">ยกเลิก</button>
+        <button id="confirm-ok-btn" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-medium transition shadow-lg shadow-rose-600/30 touch-target">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="max-w-6xl mx-auto px-3.5 sm:px-6 pt-5 pb-12">
+    
+    <!-- Top Header -->
+    <header class="bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-800/80 border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl mb-6 relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Brand & Coach Title -->
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-inner shrink-0">
+            <!-- Tactical Board SVG Icon -->
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="3" x2="21" y1="12" y2="12"/><path d="M12 3v3"/><path d="M12 18v3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Coach’s Development Hub</h1>
+              <span class="px-2 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/30">IDP Mode</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">ระบบวิเคราะห์และบันทึกข้อมูลพัฒนาการนักเตะรายบุคคล</p>
+          </div>
+        </div>
+
+        <!-- Action Header Buttons -->
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <button id="btn-export-data" class="px-3 py-2 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 text-xs sm:text-sm font-medium rounded-xl flex items-center gap-1.5 transition touch-target" title="สำรองข้อมูลเป็นไฟล์">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>สำรองข้อมูล</span>
+          </button>
+          <button id="btn-add-player" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition shadow-lg shadow-emerald-600/30 touch-target">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>+ เพิ่มนักเตะใหม่</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Squad Stats Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mt-5 pt-4 border-t border-slate-800/70">
+        <div class="bg-slate-950/60 border border-slate-800/60 rounded-xl p-2.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider block">นักเตะทั้งหมด</span>
+            <span id="stat-total" class="text-lg font-bold text-white">0</span>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 text-xs">⚽</span>
+        </div>
+        <div class="bg-slate-950/60 border border-slate-800/60 rounded-xl p-2.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] text-amber-400 uppercase tracking-wider block">ผู้รักษาประตู (GK)</span>
+            <span id="stat-gk" class="text-lg font-bold text-amber-400">0</span>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs font-bold">🧤</span>
+        </div>
+        <div class="bg-slate-950/60 border border-slate-800/60 rounded-xl p-2.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] text-blue-400 uppercase tracking-wider block">กองหลัง (DEF)</span>
+            <span id="stat-def" class="text-lg font-bold text-blue-400">0</span>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs font-bold">🛡️</span>
+        </div>
+        <div class="bg-slate-950/60 border border-slate-800/60 rounded-xl p-2.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] text-emerald-400 uppercase tracking-wider block">กองกลาง (MID)</span>
+            <span id="stat-mid" class="text-lg font-bold text-emerald-400">0</span>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs font-bold">⚙️</span>
+        </div>
+        <div class="bg-slate-950/60 border border-slate-800/60 rounded-xl p-2.5 flex items-center justify-between col-span-2 sm:col-span-1">
+          <div>
+            <span class="text-[11px] text-rose-400 uppercase tracking-wider block">กองหน้า (FWD)</span>
+            <span id="stat-fwd" class="text-lg font-bold text-rose-400">0</span>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-xs font-bold">⚡</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls: Search & Position Filter Tabs -->
+    <div class="sticky top-2 z-20 bg-slate-950/90 backdrop-blur-md pb-3 pt-1">
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <!-- Search input -->
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input type="text" id="search-input" placeholder="ค้นหาด้วยชื่อ, ชื่อเล่น, หรือเบอร์เสื้อ..." 
+                 class="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-xl pl-10 pr-9 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition shadow-sm outline-none touch-target">
+          <button id="search-clear-btn" class="absolute inset-y-0 right-0 pr-3 items-center text-slate-500 hover:text-slate-300 hidden">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Filter tabs (Horizontal scroll on very small screens) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none" id="position-filter-tabs">
+          <button data-pos="ALL" class="pos-tab active px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition touch-target whitespace-nowrap bg-emerald-600 text-white shadow-md shadow-emerald-900/40">ทั้งหมด</button>
+          <button data-pos="GK" class="pos-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition touch-target whitespace-nowrap bg-slate-900 border border-slate-800 text-slate-400 hover:text-amber-400 hover:bg-slate-800/60">GK</button>
+          <button data-pos="DEF" class="pos-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition touch-target whitespace-nowrap bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-400 hover:bg-slate-800/60">DEF</button>
+          <button data-pos="MID" class="pos-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition touch-target whitespace-nowrap bg-slate-900 border border-slate-800 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/60">MID</button>
+          <button data-pos="FWD" class="pos-tab px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition touch-target whitespace-nowrap bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:bg-slate-800/60">FWD</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Players Grid -->
+    <main>
+      <div id="player-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+        <!-- Dynamically injected cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-16 px-4 bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl mt-4">
+        <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-500 mb-3">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h3 class="text-base font-semibold text-slate-200">ไม่พบข้อมูลนักเตะที่ค้นหา</h3>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">ลองค้นหาด้วยคำอื่น หรือคลิกปุ่มด้านล่างเพื่อเพิ่มนักเตะใหม่เข้าสู่ทีม</p>
+        <button onclick="document.getElementById('btn-add-player').click()" class="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 transition shadow">
+          <span>+ เพิ่มนักเตะใหม่</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer Utility Links -->
+    <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div>ออกแบบเพื่อโค้ชฟุตบอล • พัฒนานักเตะด้วย 4-Corner Model</div>
+      <div class="flex items-center gap-4">
+        <button id="btn-reset-demo" class="hover:text-rose-400 underline transition">โหลดตัวอย่างข้อมูลใหม่</button>
+        <button id="btn-clear-all" class="hover:text-rose-400 underline transition">ล้างข้อมูลทั้งหมด</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL 1: Full Player Detail & Evaluation (Add/Edit) -->
+  <div id="player-modal" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm hidden overflow-y-auto p-2 sm:p-4">
+    <div class="min-h-full flex items-center justify-center">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative my-6">
+        
+        <!-- Modal Top Bar -->
+        <div class="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between sticky top-0 z-10 backdrop-blur bg-slate-900/95">
+          <div class="flex items-center gap-2.5">
+            <div id="modal-pos-indicator" class="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <h2 id="modal-title" class="text-lg font-bold text-white">ข้อมูลและการประเมินนักเตะ</h2>
+          </div>
+          <button id="modal-close-btn" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition touch-target">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Form Body -->
+        <form id="player-form" class="p-4 sm:p-6 space-y-6">
+          <input type="hidden" id="form-player-id">
+
+          <!-- Section 1: General Info -->
+          <div>
+            <h3 class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <span>👤</span> ข้อมูลทั่วไป (Profile)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+              <!-- Name -->
+              <div class="sm:col-span-5">
+                <label class="block text-xs text-slate-400 mb-1">ชื่อ-นามสกุล <span class="text-rose-400">*</span></label>
+                <input type="text" id="form-name" required placeholder="เช่น ธีรศักดิ์ ศรีวิชัย" 
+                       class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+              </div>
+
+              <!-- Nickname -->
+              <div class="sm:col-span-3">
+                <label class="block text-xs text-slate-400 mb-1">ชื่อเล่น <span class="text-rose-400">*</span></label>
+                <input type="text" id="form-nickname" required placeholder="เช่น แชมป์" 
+                       class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+              </div>
+
+              <!-- Jersey Number -->
+              <div class="sm:col-span-2">
+                <label class="block text-xs text-slate-400 mb-1">เบอร์เสื้อ</label>
+                <input type="number" id="form-number" min="0" max="99" placeholder="10" 
+                       class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+              </div>
+
+              <!-- Primary Position -->
+              <div class="sm:col-span-2">
+                <label class="block text-xs text-slate-400 mb-1">ตำแหน่งหลัก <span class="text-rose-400">*</span></label>
+                <select id="form-position" class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-2.5 py-2 text-sm text-white outline-none">
+                  <option value="GK">GK - โกล์</option>
+                  <option value="DEF">DEF - กองหลัง</option>
+                  <option value="MID">MID - กองกลาง</option>
+                  <option value="FWD">FWD - กองหน้า</option>
+                </select>
+              </div>
+
+              <!-- Sub-position / Role -->
+              <div class="sm:col-span-4">
+                <label class="block text-xs text-slate-400 mb-1">บทบาท/ตำแหน่งรอง</label>
+                <input type="text" id="form-subposition" placeholder="เช่น แบ็กขวา, ปีกซ้าย, กองหลังตัวกลาง" 
+                       class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+              </div>
+
+              <!-- Foot -->
+              <div class="sm:col-span-3">
+                <label class="block text-xs text-slate-400 mb-1">เท้าที่ถนัด</label>
+                <select id="form-foot" class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-2.5 py-2 text-sm text-white outline-none">
+                  <option value="ขวา">ขวา (Right)</option>
+                  <option value="ซ้าย">ซ้าย (Left)</option>
+                  <option value="ทั้งสองข้าง">ทั้งสองข้าง (Both)</option>
+                </select>
+              </div>
+
+              <!-- Height & Age -->
+              <div class="sm:col-span-3">
+                <label class="block text-xs text-slate-400 mb-1">ส่วนสูง (ซม.)</label>
+                <input type="number" id="form-height" placeholder="เช่น 175" 
+                       class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs text-slate-400 mb-1">อายุ (ปี)</label>
+                <input type="number" id="form-age" placeholder="เช่น 18" 
+                       class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: 4-Corner Evaluation (Sliders 1 - 10) -->
+          <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🎯</span> การประเมิน 4 มิติ (4-Corner Model)
+              </h3>
+              <span class="text-[11px] text-slate-400">ระดับคะแนน 1 - 10</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Technical -->
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-medium text-slate-200">1. ด้านเทคนิค (Technical)</span>
+                  <span id="label-tech" class="text-sm font-bold text-amber-400">7/10</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-2">การจับบอลแรก, ยิง, จ่ายบอลสั้น-ยาว, ทักษะ 1v1</p>
+                <input type="range" id="form-tech" min="1" max="10" value="7" 
+                       class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">
+              </div>
+
+              <!-- Tactical -->
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-medium text-slate-200">2. ความเข้าใจเกม (Tactical)</span>
+                  <span id="label-tact" class="text-sm font-bold text-blue-400">6/10</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-2">การยืนตำแหน่ง, การอ่านเกม, การตัดสินใจในเสี้ยววินาที</p>
+                <input type="range" id="form-tact" min="1" max="10" value="6" 
+                       class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-400">
+              </div>
+
+              <!-- Physical -->
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-medium text-slate-200">3. สภาพร่างกาย (Physical)</span>
+                  <span id="label-phys" class="text-sm font-bold text-emerald-400">8/10</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-2">ความเร็วต้น, ความอึดฟิต 90 นาที, แรงปะทะ, บาลานซ์</p>
+                <input type="range" id="form-phys" min="1" max="10" value="8" 
+                       class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">
+              </div>
+
+              <!-- Mentality -->
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-medium text-slate-200">4. จิตใจ & วินัย (Mentality)</span>
+                  <span id="label-ment" class="text-sm font-bold text-purple-400">7/10</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-2">สมาธิเมื่อโดนนำ, ความทุ่มเทเพื่อทีม, วินัยการฝึกซ้อม</p>
+                <input type="range" id="form-ment" min="1" max="10" value="7" 
+                       class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Core Coaching Action Points -->
+          <div>
+            <h3 class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <span>📋</span> แผนการพัฒนาเฉพาะบุคคล (Action Plan)
+            </h3>
+            
+            <div class="space-y-3.5">
+              <!-- Strengths -->
+              <div>
+                <label class="block text-xs font-medium text-emerald-400 mb-1">🌟 จุดเด่นสำคัญ (Key Strengths)</label>
+                <textarea id="form-strengths" rows="2" placeholder="เช่น สปีดต้นเร็วมาก, จ่ายบอลตัดหลังแนวรับแม่นยำ, ทัศนคติพร้อมเรียนรู้" 
+                          class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none resize-none"></textarea>
+              </div>
+
+              <!-- Weaknesses -->
+              <div>
+                <label class="block text-xs font-medium text-rose-400 mb-1">⚠️ จุดที่ต้องเร่งแก้ไข (Areas to Improve)</label>
+                <textarea id="form-weaknesses" rows="2" placeholder="เช่น หวงบอลเกินไปในแดนกลาง, เท้าซ้ายยังเปิดบอลไม่แม่น, ท้ายเกมสมาธิหลุด" 
+                          class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-rose-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none resize-none"></textarea>
+              </div>
+
+              <!-- Homework -->
+              <div>
+                <label class="block text-xs font-medium text-blue-400 mb-1">🎯 การบ้าน / เป้าหมายประจำเดือน (Monthly Homework)</label>
+                <textarea id="form-homework" rows="2" placeholder="เช่น ฝึกเตะเปิดบอลด้วยเท้าข้างไม่ถนัดวันละ 20 ลูก + เล่นเกมรับวิ่งบีบพื้นที่ไม่ทิ้งตำแหน่ง" 
+                          class="w-full bg-slate-800/80 border border-slate-700/80 focus:border-blue-500 rounded-xl px-3.5 py-2 text-sm text-white outline-none resize-none"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Notes History / Timeline in Edit Mode -->
+          <div id="modal-notes-section" class="border-t border-slate-800 pt-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📝</span> บันทึกจากโค้ชย้อนหลัง (Coach Logs)
+              </h3>
+              <button type="button" id="btn-modal-add-note" class="text-xs text-emerald-400 hover:text-emerald-300 font-medium">
+                + เพิ่มโน้ตใหม่
+              </button>
+            </div>
+            
+            <div id="modal-notes-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <!-- Logs dynamically placed here -->
+            </div>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+            <button type="button" id="btn-delete-player" class="px-3.5 py-2.5 rounded-xl border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs sm:text-sm font-medium transition touch-target hidden">
+              ลบนักเตะ
+            </button>
+            <div class="flex items-center gap-2.5 ml-auto">
+              <button type="button" id="btn-cancel-form" class="px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs sm:text-sm font-medium transition touch-target">
+                ยกเลิก
+              </button>
+              <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold transition shadow-lg shadow-emerald-600/30 touch-target">
+                บันทึกข้อมูล
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Quick Note Modal (Fast sideline note entry) -->
+  <div id="quick-note-modal" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+            <span>⚡</span> บันทึกโน้ตด่วนข้างสนาม
+          </h3>
+          <p id="quick-note-player-name" class="text-xs text-emerald-400 mt-0.5">นักเตะ: -</p>
+        </div>
+        <button id="quick-note-close-btn" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition touch-target">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="quick-note-form" class="space-y-4">
+        <input type="hidden" id="quick-note-player-id">
+        
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">ประเภทเหตุการณ์</label>
+          <div class="grid grid-cols-3 gap-2" id="quick-note-tag-group">
+            <label class="cursor-pointer">
+              <input type="radio" name="note-tag" value="แมตช์แข่งขัน" checked class="peer sr-only">
+              <div class="p-2 text-center text-xs font-medium rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-300 transition">
+                ⚽ แข่งขัน
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="note-tag" value="การฝึกซ้อม" class="peer sr-only">
+              <div class="p-2 text-center text-xs font-medium rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-300 transition">
+                🏃 ซ้อมประจำวัน
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="note-tag" value="ทัศนคติ/ฟิตเนส" class="peer sr-only">
+              <div class="p-2 text-center text-xs font-medium rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-300 transition">
+                🧠 จิตใจ/ฟิตเนส
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">สิ่งที่สังเกตเห็นในสนาม / คำแนะนำสั้นๆ</label>
+          <textarea id="quick-note-text" required rows="3" placeholder="เช่น 'ครึ่งแรกวิ่งเพรสซิ่งดีมาก บอลแรกเนียนขึ้น แต่ครึ่งหลังหมดแรงจนเดินเล่น ต้องติวเรื่องคุมจังหวะวิ่ง'" 
+                    class="w-full bg-slate-800/90 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" id="quick-note-cancel" class="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs sm:text-sm font-medium transition touch-target">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold transition shadow-md touch-target">บันทึกโน้ต</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // Initial Sample Squad Data
+    const SAMPLE_PLAYERS = [
+      {
+        id: "p_101",
+        name: "ธีรศักดิ์ ศรีวิชัย",
+        nickname: "แชมป์",
+        number: 10,
+        position: "FWD",
+        subPosition: "หน้าเป้า / ปีกซ้าย",
+        preferredFoot: "ขวา",
+        height: 180,
+        age: 20,
+        ratings: {
+          technical: 8,
+          tactical: 7,
+          physical: 8,
+          mentality: 7
+        },
+        strengths: "สปีดต้นจัด วิ่งทะลุไลน์กองหลังเก่ง ยิงจังหวะแรกได้คม",
+        weaknesses: "ชอบเก็บบอลไว้กับตัวนานเกินไปเวลาโดนรุม และไม่ค่อยช่วยเพรสซิ่งตอนเสียบอล",
+        homework: "ฝึกยิงด้วยเท้าซ้ายข้างไม่ถนัดวันละ 20 ลูก + เมื่อเสียบอลต้องเป็นคนแรกที่เข้าบีบ",
+        notes: [
+          { id: "n1", date: "24 ต.ค. 2026", tag: "แมตช์แข่งขัน", text: "ยิง 1 ลูกจากการสปีดหนีเซ็นเตอร์ สภาพความฟิตดีขึ้นมาก แต่ยังเสียบอลเพราะฝืนเลี้ยง" },
+          { id: "n2", date: "18 ต.ค. 2026", tag: "การฝึกซ้อม", text: "ซ้อมยิงบอลจังหวะแรกได้แม่นยำขึ้น ทัศนคติดีมาก ไม่บ่นเวลาโดนติง" }
+        ]
+      },
+      {
+        id: "p_102",
+        name: "ภัทรดนัย บุญมา",
+        nickname: "เจ",
+        number: 8,
+        position: "MID",
+        subPosition: "กองกลางตัวทำเกม (Box-to-Box)",
+        preferredFoot: "ทั้งสองข้าง",
+        height: 174,
+        age: 21,
+        ratings: {
+          technical: 9,
+          tactical: 8,
+          physical: 7,
+          mentality: 8
+        },
+        strengths: "วิสัยทัศน์จ่ายบอลทะลุช่องยอดเยี่ยม จับบอลแรกนิ่ม เล่นได้ทั้งสองเท้า",
+        weaknesses: "แรงปะทะสู้แดนกลางตัวใหญ่ไม่ได้ เสียเปรียบลูกกลางอากาศ",
+        homework: "เน้นเวทเทรนนิ่งช่วงลำตัว (Core Muscle) สัปดาห์ละ 3 วัน เพื่อเพิ่มแรงปะทะ",
+        notes: [
+          { id: "n3", date: "22 ต.ค. 2026", tag: "การฝึกซ้อม", text: "จ่ายคิลเลอร์พาสได้ 3 ครั้งในเกมจำลอง สื่อสารสั่งการแดนกลางได้ดีขึ้นมาก" }
+        ]
+      },
+      {
+        id: "p_103",
+        name: "กรวิชญ์ วงศ์สวัสดิ์",
+        nickname: "เบนซ์",
+        number: 4,
+        position: "DEF",
+        subPosition: "เซ็นเตอร์แบ็กตัวชน",
+        preferredFoot: "ขวา",
+        height: 186,
+        age: 22,
+        ratings: {
+          technical: 6,
+          tactical: 7,
+          physical: 9,
+          mentality: 8
+        },
+        strengths: "สรีระดีมาก ดักตัดบอลลูกโด่งชนะเกือบ 100% สกัดบอลแม่นยำหนักแน่น",
+        weaknesses: "ออกบอลจากแดนหลัง (Build-up) ยังตื่นตระหนกเวลาโดนบีบแดนบน",
+        homework: "ฝึกรับบอลหันข้างและฝึกเตะบอลยาวเปลี่ยนแกนด้วยเท้าขวาหลังเลิกซ้อม",
+        notes: [
+          { id: "n4", date: "24 ต.ค. 2026", tag: "แมตช์แข่งขัน", text: "ช่วยสกัดจังหวะอันตรายได้ 4 ครั้ง แต่มีจ่ายบอลเสีย 1 ครั้งจนเกือบเสียประตู ต้องสอนให้นิ่งกว่านี้" }
+        ]
+      },
+      {
+        id: "p_104",
+        name: "ศุภชัย จารุเดช",
+        nickname: "โอ๊ค",
+        number: 1,
+        position: "GK",
+        subPosition: "Sweeper Keeper",
+        preferredFoot: "ซ้าย",
+        height: 188,
+        age: 23,
+        ratings: {
+          technical: 7,
+          tactical: 8,
+          physical: 8,
+          mentality: 9
+        },
+        strengths: "ปฏิกิริยาเซฟลูกเร็วยอดเยี่ยม ออกมาตัดบอลนอกกรอบเขตโทษได้ฉลาด เป็นผู้นำ",
+        weaknesses: "การเปิดบอลลูกตั้งเตะจากพื้นบางครั้งน้ำหนักขาดเกิน",
+        homework: "ซ้อมเตะเปิดบอลโด่งไปพื้นที่ปีกซ้ายและขวาให้ตรงเป้าหมาย",
+        notes: [
+          { id: "n5", date: "15 ต.ค. 2026", tag: "การฝึกซ้อม", text: "สั่งการแนวรับเสียงดังดีมาก มีภาวะผู้นำสูง สภาพจิตใจพร้อมแข่งขันตลอดเวลา" }
+        ]
+      }
+    ];
+
+    // State
+    let players = [];
+    let currentFilter = 'ALL';
+    let searchQuery = '';
+
+    // Position Styling Configurations
+    const POSITION_META = {
+      GK: { label: 'ผู้รักษาประตู (GK)', badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30', border: 'border-amber-500/30' },
+      DEF: { label: 'กองหลัง (DEF)', badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30', border: 'border-blue-500/30' },
+      MID: { label: 'กองกลาง (MID)', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', border: 'border-emerald-500/30' },
+      FWD: { label: 'กองหน้า (FWD)', badge: 'bg-rose-500/20 text-rose-400 border-rose-500/30', border: 'border-rose-500/30' }
+    };
+
+    // Load from LocalStorage or initialize
+    function loadData() {
+      try {
+        const stored = localStorage.getItem('coach_squad_data_v1');
+        if (stored) {
+          players = JSON.parse(stored);
+        } else {
+          players = [...SAMPLE_PLAYERS];
+          saveData();
+        }
+      } catch (e) {
+        console.error('Error loading data:', e);
+        players = [...SAMPLE_PLAYERS];
+      }
+      render();
+    }
+
+    // Save to LocalStorage
+    function saveData() {
+      try {
+        localStorage.setItem('coach_squad_data_v1', JSON.stringify(players));
+      } catch (e) {
+        console.error('Storage quota exceeded or error:', e);
+        showToast('ไม่สามารถบันทึกลงหน่วยความจำของเครื่องได้', 'error');
+      }
+    }
+
+    // Toast Alert Helper
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const isSuccess = type === 'success';
+      const bg = isSuccess ? 'bg-slate-900 border-emerald-500/80 text-white' : 'bg-slate-900 border-rose-500/80 text-white';
+      const icon = isSuccess ? '✅' : '⚠️';
+
+      toast.className = `p-3.5 rounded-xl border shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-medium transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${bg}`;
+      toast.innerHTML = `<span>${icon}</span><span class="flex-1">${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      // Animate in
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      // Remove after 3.2s
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // Custom Confirmation Modal Helper
+    function openConfirmModal(title, desc, onConfirm) {
+      const modal = document.getElementById('confirm-modal');
+      const box = document.getElementById('confirm-box');
+      const titleEl = document.getElementById('confirm-title');
+      const descEl = document.getElementById('confirm-desc');
+      const cancelBtn = document.getElementById('confirm-cancel-btn');
+      const okBtn = document.getElementById('confirm-ok-btn');
+
+      titleEl.textContent = title;
+      descEl.textContent = desc;
+
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        box.classList.remove('scale-95');
+      });
+
+      const cleanup = () => {
+        modal.classList.add('opacity-0');
+        box.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+        cancelBtn.onclick = null;
+        okBtn.onclick = null;
+      };
+
+      cancelBtn.onclick = () => cleanup();
+      okBtn.onclick = () => {
+        cleanup();
+        onConfirm();
+      };
+    }
+
+    // Calculate Overall Rating average
+    function calculateAverageRating(ratings) {
+      if (!ratings) return '0.0';
+      const sum = (Number(ratings.technical) || 0) + 
+                  (Number(ratings.tactical) || 0) + 
+                  (Number(ratings.physical) || 0) + 
+                  (Number(ratings.mentality) || 0);
+      return (sum / 4).toFixed(1);
+    }
+
+    // Render stats and player list
+    function render() {
+      updateStats();
+      renderGrid();
+    }
+
+    function updateStats() {
+      const total = players.length;
+      const gk = players.filter(p => p.position === 'GK').length;
+      const def = players.filter(p => p.position === 'DEF').length;
+      const mid = players.filter(p => p.position === 'MID').length;
+      const fwd = players.filter(p => p.position === 'FWD').length;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-gk').textContent = gk;
+      document.getElementById('stat-def').textContent = def;
+      document.getElementById('stat-mid').textContent = mid;
+      document.getElementById('stat-fwd').textContent = fwd;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('player-grid');
+      const emptyState = document.getElementById('empty-state');
+      grid.innerHTML = '';
+
+      // Filter & Search
+      const filtered = players.filter(p => {
+        const matchesPos = currentFilter === 'ALL' || p.position === currentFilter;
+        const q = searchQuery.trim().toLowerCase();
+        const matchesSearch = !q || 
+          p.name.toLowerCase().includes(q) || 
+          p.nickname.toLowerCase().includes(q) || 
+          String(p.number || '').includes(q) ||
+          (p.subPosition && p.subPosition.toLowerCase().includes(q));
+
+        return matchesPos && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      // Sort by Jersey Number or Name
+      filtered.sort((a, b) => (Number(a.number) || 999) - (Number(b.number) || 999));
+
+      filtered.forEach(player => {
+        const avg = calculateAverageRating(player.ratings);
+        const meta = POSITION_META[player.position] || POSITION_META.MID;
+        const noteCount = player.notes ? player.notes.length : 0;
+        const latestNote = noteCount > 0 ? player.notes[0] : null;
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-900/90 border border-slate-800/90 hover:border-slate-700 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 relative group";
+
+        card.innerHTML = `
+          <div>
+            <!-- Card Header: Number, Name, Position, Rating -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-base text-white shadow-inner shrink-0 group-hover:border-emerald-500/50 transition">
+                  ${player.number ? '#' + player.number : '-'}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <h3 class="font-bold text-base text-white tracking-tight">${player.name}</h3>
+                    <span class="text-xs font-medium text-emerald-400">("${player.nickname}")</span>
+                  </div>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-[11px] px-2 py-0.5 rounded-md font-semibold border ${meta.badge}">${player.position}</span>
+                    <span class="text-xs text-slate-400">${player.subPosition || 'ผู้เล่นตำแหน่งหลัก'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rating Badge -->
+              <div class="text-right shrink-0">
+                <div class="inline-flex flex-col items-end">
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold">เรตติ้ง</span>
+                  <span class="text-base font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">${avg}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bio Tags -->
+            <div class="flex items-center gap-2 text-[11px] text-slate-400 pb-3 border-b border-slate-800/80 mb-3 flex-wrap">
+              <span class="flex items-center gap-1">🦶 ถนัด: <strong class="text-slate-200 font-medium">${player.preferredFoot || 'ไม่ระบุ'}</strong></span>
+              <span>•</span>
+              <span>📏 ${player.height ? player.height + ' ซม.' : '-'}</span>
+              <span>•</span>
+              <span>🎂 ${player.age ? player.age + ' ปี' : '-'}</span>
+            </div>
+
+            <!-- 4-Corner Progress Bars (Compact) -->
+            <div class="grid grid-cols-2 gap-2 text-xs mb-3.5 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-slate-400">เทคนิค</span>
+                  <span class="font-bold text-amber-400">${player.ratings.technical}/10</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full" style="width: ${player.ratings.technical * 10}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-slate-400">แท็กติก</span>
+                  <span class="font-bold text-blue-400">${player.ratings.tactical}/10</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-400 rounded-full" style="width: ${player.ratings.tactical * 10}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-slate-400">ร่างกาย</span>
+                  <span class="font-bold text-emerald-400">${player.ratings.physical}/10</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-400 rounded-full" style="width: ${player.ratings.physical * 10}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-slate-400">จิตใจ</span>
+                  <span class="font-bold text-purple-400">${player.ratings.mentality}/10</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-purple-400 rounded-full" style="width: ${player.ratings.mentality * 10}%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Strengths & Weakness Preview -->
+            <div class="space-y-1.5 text-xs mb-3">
+              <div class="flex items-start gap-1.5">
+                <span class="text-emerald-400 shrink-0 font-bold">จุดเด่น:</span>
+                <span class="text-slate-300 line-clamp-1">${player.strengths || '-'}</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="text-rose-400 shrink-0 font-bold">แก้ด่วน:</span>
+                <span class="text-slate-300 line-clamp-1">${player.weaknesses || '-'}</span>
+              </div>
+            </div>
+
+            <!-- Recent Note Snippet if any -->
+            ${latestNote ? `
+              <div class="bg-slate-800/50 rounded-xl p-2.5 text-[11px] border border-slate-800 mb-3">
+                <div class="flex items-center justify-between text-slate-400 mb-0.5">
+                  <span class="font-medium text-emerald-400">📌 บันทึกล่าสุด (${latestNote.tag})</span>
+                  <span>${latestNote.date}</span>
+                </div>
+                <p class="text-slate-300 line-clamp-2 leading-relaxed">${latestNote.text}</p>
+              </div>
+            ` : `
+              <div class="text-[11px] text-slate-500 italic mb-3">ยังไม่มีบันทึกข้างสนาม</div>
+            `}
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="pt-3 border-t border-slate-800 flex items-center gap-2">
+            <button onclick="openQuickNoteModal('${player.id}')" 
+                    class="flex-1 py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition touch-target border border-slate-700/80">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              <span>+ โน้ตข้างสนาม</span>
+            </button>
+            <button onclick="openPlayerModal('${player.id}')" 
+                    class="flex-1 py-2 px-3 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition touch-target shadow-md shadow-emerald-950">
+              <span>ดูข้อมูล / ประเมิน</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Modal Operations: Open Player Edit/Add Modal
+    function openPlayerModal(playerId = null) {
+      const modal = document.getElementById('player-modal');
+      const form = document.getElementById('player-form');
+      const deleteBtn = document.getElementById('btn-delete-player');
+      const modalTitle = document.getElementById('modal-title');
+      const notesSection = document.getElementById('modal-notes-section');
+      
+      form.reset();
+
+      if (playerId) {
+        const player = players.find(p => p.id === playerId);
+        if (!player) return;
+
+        document.getElementById('form-player-id').value = player.id;
+        document.getElementById('form-name').value = player.name || '';
+        document.getElementById('form-nickname').value = player.nickname || '';
+        document.getElementById('form-number').value = player.number || '';
+        document.getElementById('form-position').value = player.position || 'MID';
+        document.getElementById('form-subposition').value = player.subPosition || '';
+        document.getElementById('form-foot').value = player.preferredFoot || 'ขวา';
+        document.getElementById('form-height').value = player.height || '';
+        document.getElementById('form-age').value = player.age || '';
+
+        // Sliders
+        const r = player.ratings || { technical: 7, tactical: 7, physical: 7, mentality: 7 };
+        document.getElementById('form-tech').value = r.technical;
+        document.getElementById('form-tact').value = r.tactical;
+        document.getElementById('form-phys').value = r.physical;
+        document.getElementById('form-ment').value = r.mentality;
+        updateSliderLabels();
+
+        // Texts
+        document.getElementById('form-strengths').value = player.strengths || '';
+        document.getElementById('form-weaknesses').value = player.weaknesses || '';
+        document.getElementById('form-homework').value = player.homework || '';
+
+        // Notes history
+        renderModalNotes(player);
+        notesSection.classList.remove('hidden');
+
+        deleteBtn.classList.remove('hidden');
+        modalTitle.textContent = `ประเมินและพัฒนา: ${player.name} (${player.nickname})`;
+      } else {
+        // New Player mode
+        document.getElementById('form-player-id').value = '';
+        document.getElementById('form-tech').value = 7;
+        document.getElementById('form-tact').value = 7;
+        document.getElementById('form-phys').value = 7;
+        document.getElementById('form-ment').value = 7;
+        updateSliderLabels();
+
+        deleteBtn.classList.add('hidden');
+        notesSection.classList.add('hidden');
+        modalTitle.textContent = '+ เพิ่มนักเตะใหม่เข้าทีม';
+      }
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePlayerModal() {
+      document.getElementById('player-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Render notes inside the Edit Modal
+    function renderModalNotes(player) {
+      const container = document.getElementById('modal-notes-list');
+      container.innerHTML = '';
+
+      if (!player.notes || player.notes.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 italic py-2">ยังไม่มีประวัติบันทึกสำหรับนักเตะคนนี้</p>';
+        return;
+      }
+
+      player.notes.forEach(note => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/80 text-xs text-slate-300';
+        item.innerHTML = `
+          <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+            <span class="font-semibold text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">${note.tag}</span>
+            <span>${note.date}</span>
+          </div>
+          <p class="leading-relaxed">${note.text}</p>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // Quick Note Modal Actions
+    function openQuickNoteModal(playerId) {
+      const player = players.find(p => p.id === playerId);
+      if (!player) return;
+
+      document.getElementById('quick-note-player-id').value = player.id;
+      document.getElementById('quick-note-player-name').textContent = `นักเตะ: #${player.number || '-'} ${player.name} (${player.nickname}) - ${player.position}`;
+      document.getElementById('quick-note-text').value = '';
+      
+      document.getElementById('quick-note-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('quick-note-text').focus(), 150);
+    }
+
+    function closeQuickNoteModal() {
+      document.getElementById('quick-note-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Slider Label sync
+    function updateSliderLabels() {
+      document.getElementById('label-tech').textContent = `${document.getElementById('form-tech').value}/10`;
+      document.getElementById('label-tact').textContent = `${document.getElementById('form-tact').value}/10`;
+      document.getElementById('label-phys').textContent = `${document.getElementById('form-phys').value}/10`;
+      document.getElementById('label-ment').textContent = `${document.getElementById('form-ment').value}/10`;
+    }
+
+    // Setup Event Listeners
+    function setupEvents() {
+      // Sliders input events
+      ['form-tech', 'form-tact', 'form-phys', 'form-ment'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateSliderLabels);
+      });
+
+      // Filter Tabs
+      const tabs = document.querySelectorAll('.pos-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => {
+            t.classList.remove('active', 'bg-emerald-600', 'text-white', 'shadow-md');
+            t.classList.add('bg-slate-900', 'border', 'border-slate-800', 'text-slate-400');
+          });
+          tab.classList.add('active', 'bg-emerald-600', 'text-white', 'shadow-md');
+          tab.classList.remove('bg-slate-900', 'border-slate-800', 'text-slate-400');
+          currentFilter = tab.getAttribute('data-pos');
+          renderGrid();
+        });
+      });
+
+      // Search input with debounce
+      const searchInput = document.getElementById('search-input');
+      const searchClear = document.getElementById('search-clear-btn');
+      
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        if (searchQuery.length > 0) {
+          searchClear.classList.remove('hidden');
+          searchClear.classList.add('flex');
+        } else {
+          searchClear.classList.add('hidden');
+          searchClear.classList.remove('flex');
+        }
+        renderGrid();
+      });
+
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        searchClear.classList.add('hidden');
+        searchClear.classList.remove('flex');
+        renderGrid();
+        searchInput.focus();
+      });
+
+      // Add Player Button
+      document.getElementById('btn-add-player').addEventListener('click', () => {
+        openPlayerModal(null);
+      });
+
+      // Modal Close Buttons
+      document.getElementById('modal-close-btn').addEventListener('click', closePlayerModal);
+      document.getElementById('btn-cancel-form').addEventListener('click', closePlayerModal);
+      document.getElementById('quick-note-close-btn').addEventListener('click', closeQuickNoteModal);
+      document.getElementById('quick-note-cancel').addEventListener('click', closeQuickNoteModal);
+
+      // Open Quick Note from within Edit modal
+      document.getElementById('btn-modal-add-note').addEventListener('click', () => {
+        const id = document.getElementById('form-player-id').value;
+        if (id) {
+          closePlayerModal();
+          openQuickNoteModal(id);
+        }
+      });
+
+      // Form Submit: Save Player
+      document.getElementById('player-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('form-player-id').value;
+        const name = document.getElementById('form-name').value.trim();
+        const nickname = document.getElementById('form-nickname').value.trim();
+        const number = document.getElementById('form-number').value ? parseInt(document.getElementById('form-number').value) : null;
+        const position = document.getElementById('form-position').value;
+        const subPosition = document.getElementById('form-subposition').value.trim();
+        const preferredFoot = document.getElementById('form-foot').value;
+        const height = document.getElementById('form-height').value ? parseInt(document.getElementById('form-height').value) : null;
+        const age = document.getElementById('form-age').value ? parseInt(document.getElementById('form-age').value) : null;
+
+        const ratings = {
+          technical: parseInt(document.getElementById('form-tech').value),
+          tactical: parseInt(document.getElementById('form-tact').value),
+          physical: parseInt(document.getElementById('form-phys').value),
+          mentality: parseInt(document.getElementById('form-ment').value)
+        };
+
+        const strengths = document.getElementById('form-strengths').value.trim();
+        const weaknesses = document.getElementById('form-weaknesses').value.trim();
+        const homework = document.getElementById('form-homework').value.trim();
+
+        if (!name || !nickname) {
+          showToast('กรุณากรอกชื่อและชื่อเล่นของนักเตะ', 'error');
+          return;
+        }
+
+        if (id) {
+          // Update existing
+          const index = players.findIndex(p => p.id === id);
+          if (index !== -1) {
+            players[index] = {
+              ...players[index],
+              name, nickname, number, position, subPosition, preferredFoot, height, age,
+              ratings, strengths, weaknesses, homework
+            };
+            showToast(`อัปเดตข้อมูลของ ${nickname} เรียบร้อยแล้ว`);
+          }
+        } else {
+          // Create new
+          const newPlayer = {
+            id: 'p_' + Date.now(),
+            name, nickname, number, position, subPosition, preferredFoot, height, age,
+            ratings, strengths, weaknesses, homework,
+            notes: []
+          };
+          players.unshift(newPlayer);
+          showToast(`เพิ่ม ${nickname} เข้าสู่ทีมเรียบร้อยแล้ว`);
+        }
+
+        saveData();
+        closePlayerModal();
+        render();
+      });
+
+      // Delete Player Button
+      document.getElementById('btn-delete-player').addEventListener('click', () => {
+        const id = document.getElementById('form-player-id').value;
+        const player = players.find(p => p.id === id);
+        if (!player) return;
+
+        openConfirmModal(
+          `ลบข้อมูล ${player.name}?`,
+          `คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลและประวัติการประเมินทั้งหมดของ "${player.nickname}" ข้อมูลนี้จะไม่สามารถกู้คืนได้`,
+          () => {
+            players = players.filter(p => p.id !== id);
+            saveData();
+            closePlayerModal();
+            render();
+            showToast(`ลบข้อมูล ${player.nickname} เรียบร้อยแล้ว`);
+          }
+        );
+      });
+
+      // Quick Note Form Submit
+      document.getElementById('quick-note-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const playerId = document.getElementById('quick-note-player-id').value;
+        const text = document.getElementById('quick-note-text').value.trim();
+        const tag = document.querySelector('input[name="note-tag"]:checked').value;
+
+        if (!text) return;
+
+        const player = players.find(p => p.id === playerId);
+        if (player) {
+          if (!player.notes) player.notes = [];
+          
+          const now = new Date();
+          const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+          const formattedDate = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
+
+          player.notes.unshift({
+            id: 'n_' + Date.now(),
+            date: formattedDate,
+            tag: tag,
+            text: text
+          });
+
+          saveData();
+          closeQuickNoteModal();
+          render();
+          showToast(`บันทึกโน้ตข้างสนามสำหรับ ${player.nickname} แล้ว`);
+        }
+      });
+
+      // Export Backup Data
+      document.getElementById('btn-export-data').addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(players, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `football_squad_backup_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast('สำรองข้อมูลไฟล์ JSON สำเร็จแล้ว');
+      });
+
+      // Reset Demo Data
+      document.getElementById('btn-reset-demo').addEventListener('click', () => {
+        openConfirmModal(
+          'โหลดข้อมูลตัวอย่างใหม่?',
+          'การกระทำนี้จะนำตัวอย่างนักเตะ 4 ตำแหน่งกลับมาใส่ในระบบแทนข้อมูลปัจจุบัน',
+          () => {
+            players = JSON.parse(JSON.stringify(SAMPLE_PLAYERS));
+            saveData();
+            render();
+            showToast('รีเซ็ตข้อมูลตัวอย่างเรียบร้อยแล้ว');
+          }
+        );
+      });
+
+      // Clear All Data
+      document.getElementById('btn-clear-all').addEventListener('click', () => {
+        openConfirmModal(
+          'ล้างข้อมูลทีมทั้งหมด?',
+          'ข้อมูลนักเตะและโน้ตทั้งหมดจะถูกลบออกจากเครื่องอย่างถาวร',
+          () => {
+            players = [];
+            saveData();
+            render();
+            showToast('ล้างข้อมูลทั้งหมดแล้ว');
+          }
+        );
+      });
+    }
+
+    // Initialize App on DOM Load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      setupEvents();
+    });
+  </script>
+</body>
+</html>
